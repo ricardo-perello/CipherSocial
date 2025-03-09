@@ -88,15 +88,16 @@ export default function JoinMeet() {
       }));
       
       // Call the API to post the root data
-      await postRoot({
-        "contract_name" : "anything",
-        "host" : "anut",
+      let response = await postRoot({
+        "contract_name" : "test4",
+        "host" : "http://localhost:4321",
         "answers" : ans
       })
 
       toast({
-        title: "Success",
-        description: "Your answers have been submitted successfully!",
+        title: "Transaction Submitted",
+        description: `Transaction hash: ${response.tx_hash}`,
+        variant: "default"
       })
 
       router.push("/meet-details")
