@@ -91,7 +91,7 @@ export default function JoinMeet() {
       await postRoot({
         "contract_name" : "anything",
         "host" : "anut",
-        "interests" : ans
+        "answers" : ans
       })
 
       toast({
