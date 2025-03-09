@@ -1,0 +1,21 @@
+# Ignore target directory — compiled artifacts, build scripts, etc.
+target/
+
+# If the project is a library, you might prefer to ignore Cargo.lock:
+# Uncomment the line below if you do NOT want Cargo.lock in version control.
+# Cargo.lock
+
+# Ignore IDE settings or other configuration files:
+.idea/
+.vscode/
+*.swp
+
+# Ignore OS or editor-specific files:
+.DS_Store
+Thumbs.db
+
+# Ignore coverage output (if you use coverage tools)
+coverage/
+
+# By default, remove any debug/logging artifacts
+*.log

@@ -1,0 +1,16 @@
+[workspace]
+resolver = "2"
+members = ["host", "contract", "methods"]
+
+[workspace.dependencies]
+sdk = { git = "https://github.com/hyle-org/hyle", package = "hyle-contract-sdk", tag = "v0.12.1" }
+client-sdk = { git = "https://github.com/hyle-org/hyle", package = "client-sdk", tag = "v0.12.1" }
+# rs_tfhe = { path = "./rs_tfhe" }  # Add rs_tfhe as a dependency
+
+# Always optimize; building and running the guest takes much longer without optimization.
+[profile.dev]
+opt-level = 3
+
+[profile.release]
+debug = 1
+lto = true
