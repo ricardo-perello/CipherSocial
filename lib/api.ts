@@ -1,4 +1,4 @@
-const API_BASE_URL = "http://localhost:5000"
+const API_BASE_URL = "http://localhost:8080"
 
 /**
  * Create a new meetup
@@ -34,6 +34,7 @@ export async function createMeetup(data: any) {
  */
 export async function postRoot(data: any) {
   try {
+    console.log(data);
     const response = await fetch(`${API_BASE_URL}/post-root`, {
       method: "POST",
       headers: {

@@ -52,7 +52,10 @@ export default function JoinMeet() {
       setError("Please select an option before continuing")
       return
     }
-
+    // Find the index of the selected answer in the choices array
+    questions[currentStep].answerId = questions[currentStep].options.findIndex(
+      choice => choice === questions[currentStep].answer
+    )
     if (currentStep < questions.length - 1) {
       setCurrentStep(currentStep + 1)
       setError("")
@@ -79,8 +82,17 @@ export default function JoinMeet() {
         timestamp: new Date().toISOString(),
       }
 
+      let ans = rootData.answers.map(answer => ({
+        id: answer.id,
+        answerId: answer.answer
+      }));
+      
       // Call the API to post the root data
-      await postRoot(rootData)
+      await postRoot({
+        "contract_name" : "anything",
+        "host" : "anut",
+        "interests" : ans
+      })
 
       toast({
         title: "Success",

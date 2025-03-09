@@ -21,6 +21,20 @@ const nextConfig = {
     parallelServerBuildTraces: true,
     parallelServerCompiles: true,
   },
+  // Add the headers function to inject CORS headers for your API routes.
+  async headers() {
+    return [
+      {
+        source: '/api/:path*', // This applies to all API routes
+        headers: [
+          { key: 'Access-Control-Allow-Credentials', value: 'true' },
+          { key: 'Access-Control-Allow-Origin', value: 'https://your-allowed-domain.com' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET,OPTIONS,PATCH,DELETE,POST,PUT' },
+          { key: 'Access-Control-Allow-Headers', value: 'X-CSRF-Token, X-Requested-With, Accept, Content-Type, Authorization' },
+        ],
+      },
+    ]
+  },
 }
 
 mergeConfig(nextConfig, userConfig)

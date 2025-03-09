@@ -22,6 +22,7 @@ export default function CreateMeet() {
   const { meetCode, name, questions, setName, addQuestion, updateQuestion, removeQuestion } = useMeet()
   const [showWalletDialog, setShowWalletDialog] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [counter, setCounter] = useState(0)
   const [isCreating, setIsCreating] = useState(false)
   const [errors, setErrors] = useState({
     name: "",
@@ -131,10 +132,12 @@ export default function CreateMeet() {
     } else {
       // Add new question
       addQuestion({
-        id: Date.now(),
+        id: counter,
         text: newQuestion.text.trim(),
         options: newQuestion.options,
+        answerId: -1
       })
+      setCounter(counter + 1);
     }
 
     // Reset form
@@ -194,11 +197,22 @@ export default function CreateMeet() {
       }
 
       // Call the API to create the meetup
-      await createMeetup(meetupData)
+      //await createMeetup(meetupData)
 
       toast({
         title: "Success",
         description: `Meet created successfully! Your meet code is: ${meetCode}`,
+      })
+
+      // Register contract
+      await fetch("http://127.0.0.1:8080/register-contract", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contract_name: "test4"
+        })
       })
 
       router.push("/")
