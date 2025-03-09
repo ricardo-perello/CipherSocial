@@ -41,7 +41,6 @@ export function ThemeProvider({
 
     if (theme === "system" && enableSystem) {
       const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
-
       root.classList.add(systemTheme)
       return
     }

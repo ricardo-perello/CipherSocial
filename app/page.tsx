@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { useWallet } from "@/context/wallet-context"
 import { WalletRequiredDialog } from "@/components/wallet-required-dialog"
 import { JoinMeetDialog } from "@/components/join-meet-dialog"
+import { ThemeToggle } from "@/components/theme-toggle"
 
 export default function Home() {
   const router = useRouter()
@@ -71,8 +72,9 @@ export default function Home() {
               About
             </Link>
           </nav>
-          <div className="flex items-center">
+          <div className="flex items-center gap-4">
             <WalletConnect />
+            <ThemeToggle />
           </div>
         </div>
       </header>
@@ -109,10 +111,7 @@ export default function Home() {
             </div>
           </div>
         </section>
-        <section
-          id="features"
-          className="w-full container space-y-6 bg-slate-50 py-8 dark:bg-transparent md:py-12 lg:py-24 px-4"
-        >
+        <section id="features" className="w-full container space-y-6 py-8 md:py-12 lg:py-24 px-4">
           <div className="mx-auto flex max-w-[58rem] flex-col items-center space-y-4 text-center">
             <h2 className="text-3xl font-bold leading-[1.1] sm:text-3xl md:text-5xl">Features</h2>
             <p className="max-w-full leading-normal text-muted-foreground sm:text-lg sm:leading-7">
