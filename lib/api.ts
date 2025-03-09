@@ -60,9 +60,9 @@ export async function postRoot(data: any) {
  * @param data The hashed interests data
  * @returns The response from the server
  */
-export async function sendHashedInterests(data: any) {
+export async function sendInterests(data: any) {
   try {
-    const response = await fetch(`${API_BASE_URL}/receive-hashed-interests`, {
+    const response = await fetch(`${API_BASE_URL}/receive-interests`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -77,7 +77,7 @@ export async function sendHashedInterests(data: any) {
 
     return await response.json()
   } catch (error) {
-    console.error("Error sending hashed interests:", error)
+    console.error("Error sending interests:", error)
     throw error
   }
 }

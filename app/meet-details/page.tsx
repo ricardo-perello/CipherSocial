@@ -12,6 +12,8 @@ import { WalletRequiredDialog } from "@/components/wallet-required-dialog"
 import { ArrowLeft, Users, Sparkles, Search, UserCheck, Loader2 } from "lucide-react"
 import Link from "next/link"
 
+import {sendInterests} from "@/lib/api"
+
 export default function MeetDetails() {
   const router = useRouter()
   const { connected, connectWallet } = useWallet()
@@ -28,14 +30,6 @@ export default function MeetDetails() {
       setShowWalletDialog(true)
     }
 
-    // In a real app, you would use PSI to find common interests
-    // For demo purposes, we'll just simulate some common interests
-    const answeredQuestions = questions.filter((q) => q.answer)
-    const simulatedCommonInterests = answeredQuestions
-      .filter(() => Math.random() > 0.5) // Randomly select some as "common"
-      .map((q) => `${q.text}: ${q.answer}`)
-
-    setCommonInterests(simulatedCommonInterests)
   }, [connected, questions])
 
   const handleConnectWallet = async () => {
@@ -46,7 +40,7 @@ export default function MeetDetails() {
     return success
   }
 
-  const handleSearchUser = () => {
+  const handleSearchUser = async () => {
     if (!userId.trim()) {
       alert("Please enter a user ID")
       return
@@ -54,15 +48,32 @@ export default function MeetDetails() {
 
     setIsSearching(true)
 
-    // Simulate API call to search for user
-    setTimeout(() => {
-      // In a real app, you would use PSI to find common interests with this specific user
-      const simulatedUserCommonInterests = commonInterests.filter(() => Math.random() > 0.3)
+    // In a real app, you would use PSI to find common interests with this specific user
+    console.log(questions)
+    const responses = await sendInterests({
+      "meetCode": "SIFI",
+      "address": "asdasd",
+      "answers": questions.map((q) => {
+        return {
+          "id": q.id,
+          "answerId": q.answerId,
+        }
+      })
+    })
+    console.log(responses);
+    let intersectionAnswers: string[] = []
+    questions.forEach((q) => {
+      responses.intersection.forEach((p) => {
+        console.log(responses.intersection)
+        if (q.id == p.intersection.id && q.answer) {
+          intersectionAnswers.push(q.answer)          
+        }
+      })
+    })
 
-      setSearchedUser(userId)
-      setUserCommonInterests(simulatedUserCommonInterests)
-      setIsSearching(false)
-    }, 1500)
+    setSearchedUser(userId)
+    setUserCommonInterests(intersectionAnswers)
+    setIsSearching(false)
   }
 
   if (!connected) {
@@ -202,4 +213,6 @@ export default function MeetDetails() {
     </div>
   )
 }
+
+
 

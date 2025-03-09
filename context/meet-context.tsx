@@ -26,7 +26,35 @@ interface MeetContextType {
 }
 
 // Replace the defaultQuestions array with empty array since questions will be created by users
-const defaultQuestions: Question[] = []
+const defaultQuestions: Question[] = [{
+  id: 0,
+  text: "hello",
+  options: ["asd", "Asd", "aSd", "asD", "AsD"],
+   // Changed from boolean to string to store the selected option
+  answerId : 4
+},
+{
+  id: 1,
+  text: "hello1",
+  options: ["asd", "Asd", "aSd", "asD", "AsD"],
+   // Changed from boolean to string to store the selected option
+  answerId : 4
+},
+{
+  id: 2,
+  text: "hello2",
+  options: ["asd", "Asd", "aSd", "asD", "AsD"],
+   // Changed from boolean to string to store the selected option
+  answerId : 4
+},
+{
+  id: 3,
+  text: "hello3",
+  options: ["asd", "Asd", "aSd", "asD", "AsD"],
+   // Changed from boolean to string to store the selected option
+  answerId : 4
+}
+]
 
 // Generate a random 6-character code
 const generateMeetCode = () => {
