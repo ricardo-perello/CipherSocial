@@ -47,7 +47,7 @@ export default function WalletConnect() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem className="text-xs text-muted-foreground">{address}</DropdownMenuItem>
+            <DropdownMenuItem className="text-xs text-muted-foreground break-all">{address}</DropdownMenuItem>
             <DropdownMenuItem className="text-xs text-muted-foreground">Chain ID: {chainId}</DropdownMenuItem>
             <DropdownMenuItem onClick={disconnectWallet}>Disconnect</DropdownMenuItem>
           </DropdownMenuContent>

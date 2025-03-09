@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label"
 import { useWallet } from "@/context/wallet-context"
 import { useMeet } from "@/context/meet-context"
 import { WalletRequiredDialog } from "@/components/wallet-required-dialog"
-import { ArrowLeft, Users, Sparkles, Search, UserCheck } from "lucide-react"
+import { ArrowLeft, Users, Sparkles, Search, UserCheck, Loader2 } from "lucide-react"
 import Link from "next/link"
 
 export default function MeetDetails() {
@@ -77,17 +77,17 @@ export default function MeetDetails() {
 
   return (
     <div className="container max-w-4xl py-8 px-4 mx-auto flex flex-col items-center">
-      <div className="mb-8">
+      <div className="mb-8 w-full">
         <Link href="/" className="flex items-center text-sm text-muted-foreground hover:text-primary">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Home
         </Link>
       </div>
 
-      <h1 className="text-2xl sm:text-3xl font-bold mb-2">Meet: {meetCode}</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6">Meet: {meetCode}</h1>
 
-      <div className="grid gap-8 md:grid-cols-2">
-        <Card>
+      <div className="grid gap-8 md:grid-cols-2 w-full">
+        <Card className="w-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
@@ -99,7 +99,7 @@ export default function MeetDetails() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="w-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sparkles className="h-5 w-5" />
@@ -115,7 +115,7 @@ export default function MeetDetails() {
                 {commonInterests.map((interest, index) => (
                   <li key={index} className="flex items-center gap-2">
                     <div className="h-2 w-2 rounded-full bg-primary" />
-                    {interest}
+                    <span className="text-sm sm:text-base">{interest}</span>
                   </li>
                 ))}
               </ul>
@@ -126,7 +126,7 @@ export default function MeetDetails() {
         </Card>
       </div>
 
-      <Card className="mt-8">
+      <Card className="mt-8 w-full">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <UserCheck className="h-5 w-5" />
@@ -149,10 +149,13 @@ export default function MeetDetails() {
                 <Button
                   onClick={handleSearchUser}
                   disabled={isSearching}
-                  className="flex items-center gap-2 mt-2 sm:mt-0"
+                  className="flex items-center justify-center gap-2 mt-2 sm:mt-0"
                 >
                   {isSearching ? (
-                    "Searching..."
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Searching...
+                    </>
                   ) : (
                     <>
                       <Search className="h-4 w-4" />
@@ -171,7 +174,7 @@ export default function MeetDetails() {
                     {userCommonInterests.map((interest, index) => (
                       <li key={index} className="flex items-center gap-2">
                         <div className="h-2 w-2 rounded-full bg-primary" />
-                        {interest}
+                        <span className="text-sm sm:text-base">{interest}</span>
                       </li>
                     ))}
                   </ul>
@@ -184,8 +187,8 @@ export default function MeetDetails() {
         </CardContent>
       </Card>
 
-      <div className="mt-8 flex justify-center">
-        <Button onClick={() => router.push("/")} size="lg">
+      <div className="mt-8 flex justify-center w-full">
+        <Button onClick={() => router.push("/")} size="lg" className="w-full sm:w-auto">
           Return to Home
         </Button>
       </div>

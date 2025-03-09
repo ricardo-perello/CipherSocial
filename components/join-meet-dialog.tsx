@@ -41,10 +41,12 @@ export function JoinMeetDialog({ open, onOpenChange }: JoinMeetDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Join a Meet</DialogTitle>
-          <DialogDescription>Enter the meet code provided by the meet creator.</DialogDescription>
+      <DialogContent className="sm:max-w-[425px] p-6">
+        <DialogHeader className="space-y-3">
+          <DialogTitle className="text-center text-xl">Join a Meet</DialogTitle>
+          <DialogDescription className="text-center">
+            Enter the meet code provided by the meet creator.
+          </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
@@ -57,12 +59,13 @@ export function JoinMeetDialog({ open, onOpenChange }: JoinMeetDialogProps) {
                 setCode(e.target.value.toUpperCase())
                 setError("")
               }}
+              className="text-center text-lg tracking-wider"
             />
             {error && <p className="text-sm text-red-500">{error}</p>}
           </div>
         </div>
         <DialogFooter>
-          <Button onClick={handleJoin} className="w-full">
+          <Button onClick={handleJoin} className="w-full" size="lg">
             Join Meet
           </Button>
         </DialogFooter>

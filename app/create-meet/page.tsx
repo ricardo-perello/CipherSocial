@@ -10,15 +10,19 @@ import { Textarea } from "@/components/ui/textarea"
 import { useWallet } from "@/context/wallet-context"
 import { useMeet } from "@/context/meet-context"
 import { WalletRequiredDialog } from "@/components/wallet-required-dialog"
-import { ArrowLeft, Copy, Check } from "lucide-react"
+import { ArrowLeft, Copy, Check, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { createMeetup } from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
 
 export default function CreateMeet() {
   const router = useRouter()
-  const { connected, connectWallet } = useWallet()
+  const { toast } = useToast()
+  const { connected, connectWallet, address } = useWallet()
   const { meetCode, description, questions, setDescription, toggleQuestionSelection, getSelectedQuestions } = useMeet()
   const [showWalletDialog, setShowWalletDialog] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
 
   useEffect(() => {
     if (!connected) {
@@ -40,21 +44,57 @@ export default function CreateMeet() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleCreateMeet = () => {
+  const handleCreateMeet = async () => {
     const selectedQuestions = getSelectedQuestions()
     if (selectedQuestions.length === 0) {
-      alert("Please select at least one question")
+      toast({
+        title: "Error",
+        description: "Please select at least one question",
+        variant: "destructive",
+      })
       return
     }
 
     if (!description.trim()) {
-      alert("Please add a description for your meet")
+      toast({
+        title: "Error",
+        description: "Please add a description for your meet",
+        variant: "destructive",
+      })
       return
     }
 
-    // In a real app, you would save the meet data to a database here
-    alert(`Meet created successfully! Your meet code is: ${meetCode}`)
-    router.push("/")
+    setIsCreating(true)
+
+    try {
+      // Prepare data for the API call
+      const meetupData = {
+        meetCode,
+        description,
+        questions: selectedQuestions,
+        creator: address,
+        timestamp: new Date().toISOString(),
+      }
+
+      // Call the API to create the meetup
+      await createMeetup(meetupData)
+
+      toast({
+        title: "Success",
+        description: `Meet created successfully! Your meet code is: ${meetCode}`,
+      })
+
+      router.push("/")
+    } catch (error) {
+      console.error("Error creating meet:", error)
+      toast({
+        title: "Error",
+        description: "Failed to create meet. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsCreating(false)
+    }
   }
 
   if (!connected) {
@@ -69,7 +109,7 @@ export default function CreateMeet() {
 
   return (
     <div className="container max-w-4xl py-8 px-4 mx-auto flex flex-col items-center">
-      <div className="mb-8">
+      <div className="mb-8 w-full">
         <Link href="/" className="flex items-center text-sm text-muted-foreground hover:text-primary">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Home
@@ -78,10 +118,12 @@ export default function CreateMeet() {
 
       <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Create a New Meet</h1>
 
-      <div className="flex flex-col items-start justify-between mb-6 sm:mb-8 p-4 bg-muted rounded-lg">
+      <div className="flex flex-col items-start justify-between mb-6 sm:mb-8 p-4 bg-muted rounded-lg w-full">
         <div className="mb-2 sm:mb-0">
           <p className="text-sm font-medium">Your Meet Code</p>
-          <p className="text-xl sm:text-2xl font-bold">{meetCode === "LOADING" ? "Generating..." : meetCode}</p>
+          <p className="text-xl sm:text-2xl font-bold break-all">
+            {meetCode === "LOADING" ? "Generating..." : meetCode}
+          </p>
         </div>
         <Button
           variant="outline"
@@ -104,8 +146,8 @@ export default function CreateMeet() {
         </Button>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-2">
-        <Card>
+      <div className="grid gap-8 md:grid-cols-2 w-full">
+        <Card className="w-full">
           <CardHeader>
             <CardTitle>Meet Description</CardTitle>
             <CardDescription>Provide details about your meet to help others understand its purpose.</CardDescription>
@@ -126,7 +168,7 @@ export default function CreateMeet() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="w-full">
           <CardHeader>
             <CardTitle>Select Questions</CardTitle>
             <CardDescription>
@@ -152,9 +194,21 @@ export default function CreateMeet() {
         </Card>
       </div>
 
-      <div className="mt-8 flex justify-end">
-        <Button onClick={handleCreateMeet} size="lg" disabled={meetCode === "LOADING"}>
-          Create Meet
+      <div className="mt-8 flex justify-end w-full">
+        <Button
+          onClick={handleCreateMeet}
+          size="lg"
+          disabled={meetCode === "LOADING" || isCreating}
+          className="w-full md:w-auto"
+        >
+          {isCreating ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Creating...
+            </>
+          ) : (
+            "Create Meet"
+          )}
         </Button>
       </div>
     </div>

@@ -20,12 +20,14 @@ interface WalletRequiredDialogProps {
 export function WalletRequiredDialog({ open, onOpenChange, onConnectWallet }: WalletRequiredDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Connect Wallet Required</DialogTitle>
-          <DialogDescription>You need to connect your wallet before you can create or join a meet.</DialogDescription>
+      <DialogContent className="sm:max-w-[425px] p-6">
+        <DialogHeader className="space-y-3">
+          <DialogTitle className="text-center text-xl">Connect Wallet Required</DialogTitle>
+          <DialogDescription className="text-center">
+            You need to connect your wallet before you can create or join a meet.
+          </DialogDescription>
         </DialogHeader>
-        <div className="flex items-center justify-center py-4">
+        <div className="flex items-center justify-center py-6">
           <Wallet className="h-16 w-16 text-primary opacity-80" />
         </div>
         <DialogFooter>
@@ -37,6 +39,7 @@ export function WalletRequiredDialog({ open, onOpenChange, onConnectWallet }: Wa
               }
             }}
             className="w-full"
+            size="lg"
           >
             Connect Wallet
           </Button>

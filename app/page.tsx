@@ -13,6 +13,7 @@ import { useWallet } from "@/context/wallet-context"
 import { WalletRequiredDialog } from "@/components/wallet-required-dialog"
 import { JoinMeetDialog } from "@/components/join-meet-dialog"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { MobileNav } from "@/components/mobile-nav"
 
 export default function Home() {
   const router = useRouter()
@@ -47,6 +48,7 @@ export default function Home() {
       <header className="sticky top-0 z-40 w-full border-b bg-background">
         <div className="container flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-2">
+            <MobileNav />
             <Link href="/" className="flex items-center space-x-2">
               <Users className="h-6 w-6" />
               <span className="inline-block font-bold">ConnectPSI</span>
@@ -80,7 +82,7 @@ export default function Home() {
       </header>
       <main className="flex-1 flex flex-col items-center">
         <section className="w-full space-y-6 pb-8 pt-6 md:pb-12 md:pt-10 lg:py-32 flex items-center justify-center">
-          <div className="container flex max-w-[64rem] flex-col items-center gap-4 text-center">
+          <div className="container flex max-w-[64rem] flex-col items-center gap-4 text-center px-4">
             <Badge className="px-3 py-1 text-sm" variant="secondary">
               Private Networking
             </Badge>
@@ -156,7 +158,7 @@ export default function Home() {
             </p>
           </div>
           <div className="mx-auto grid items-start gap-8 py-8 md:grid-cols-2 md:gap-12 lg:max-w-5xl">
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 order-2 md:order-1">
               <h3 className="text-xl font-bold">1. Connect Your Wallet</h3>
               <p className="text-muted-foreground">
                 Securely authenticate with your preferred EVM-compatible wallet. We never store your private keys.
@@ -167,22 +169,22 @@ export default function Home() {
               width={400}
               height={200}
               alt="Wallet connection illustration"
-              className="rounded-lg object-cover"
+              className="rounded-lg object-cover order-1 md:order-2"
             />
             <Image
               src="/placeholder.svg?height=200&width=400"
               width={400}
               height={200}
               alt="Interest selection illustration"
-              className="rounded-lg object-cover"
+              className="rounded-lg object-cover order-3 md:order-3"
             />
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 order-4 md:order-4">
               <h3 className="text-xl font-bold">2. Select Your Interests</h3>
               <p className="text-muted-foreground">
                 Choose from a wide range of interests or add your own. These are encrypted locally on your device.
               </p>
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 order-6 md:order-5">
               <h3 className="text-xl font-bold">3. Create or Join a Meet</h3>
               <p className="text-muted-foreground">
                 Start your own networking event or join an existing one with a simple code.
@@ -193,16 +195,16 @@ export default function Home() {
               width={400}
               height={200}
               alt="Meeting creation illustration"
-              className="rounded-lg object-cover"
+              className="rounded-lg object-cover order-5 md:order-6"
             />
             <Image
               src="/placeholder.svg?height=200&width=400"
               width={400}
               height={200}
               alt="PSI matching illustration"
-              className="rounded-lg object-cover"
+              className="rounded-lg object-cover order-7 md:order-7"
             />
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 order-8 md:order-8">
               <h3 className="text-xl font-bold">4. Discover Matches</h3>
               <p className="text-muted-foreground">
                 Our PSI technology finds common interests without revealing your entire list to anyone.
@@ -239,7 +241,7 @@ export default function Home() {
         </section>
       </main>
       <footer className="border-t py-6 md:py-0">
-        <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row">
+        <div className="container flex flex-col items-center justify-between gap-4 md:h-24 md:flex-row px-4">
           <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
             © {new Date().getFullYear()} ConnectPSI. All rights reserved.
           </p>

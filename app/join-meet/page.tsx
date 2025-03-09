@@ -9,15 +9,19 @@ import { Label } from "@/components/ui/label"
 import { useWallet } from "@/context/wallet-context"
 import { useMeet } from "@/context/meet-context"
 import { WalletRequiredDialog } from "@/components/wallet-required-dialog"
-import { ArrowLeft, ArrowRight } from "lucide-react"
+import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { postRoot } from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
 
 export default function JoinMeet() {
   const router = useRouter()
-  const { connected, connectWallet } = useWallet()
+  const { toast } = useToast()
+  const { connected, connectWallet, address } = useWallet()
   const { meetCode, questions, setQuestionAnswer } = useMeet()
   const [showWalletDialog, setShowWalletDialog] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const selectedQuestions = questions.filter((q) => q.selected)
 
   useEffect(() => {
@@ -41,12 +45,51 @@ export default function JoinMeet() {
     setQuestionAnswer(questionId, answer)
   }
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < selectedQuestions.length - 1) {
       setCurrentStep(currentStep + 1)
     } else {
-      // All questions answered, proceed to meet details
+      // All questions answered, submit the data and proceed to meet details
+      await handleSubmitAnswers()
+    }
+  }
+
+  const handleSubmitAnswers = async () => {
+    setIsSubmitting(true)
+
+    try {
+      // Prepare data for the API call
+      const answeredQuestions = selectedQuestions.map((q) => ({
+        id: q.id,
+        text: q.text,
+        answer: q.answer,
+      }))
+
+      const rootData = {
+        meetCode,
+        participant: address,
+        answers: answeredQuestions,
+        timestamp: new Date().toISOString(),
+      }
+
+      // Call the API to post the root data
+      await postRoot(rootData)
+
+      toast({
+        title: "Success",
+        description: "Your answers have been submitted successfully!",
+      })
+
+      // Proceed to meet details
       router.push("/meet-details")
+    } catch (error) {
+      console.error("Error submitting answers:", error)
+      toast({
+        title: "Error",
+        description: "Failed to submit answers. Please try again.",
+        variant: "destructive",
+      })
+      setIsSubmitting(false)
     }
   }
 
@@ -71,15 +114,15 @@ export default function JoinMeet() {
 
   if (selectedQuestions.length === 0) {
     return (
-      <div className="container max-w-4xl py-8 mx-auto flex flex-col items-center">
-        <div className="mb-8">
+      <div className="container max-w-4xl py-8 px-4 mx-auto flex flex-col items-center">
+        <div className="mb-8 w-full">
           <Link href="/" className="flex items-center text-sm text-muted-foreground hover:text-primary">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Home
           </Link>
         </div>
 
-        <Card>
+        <Card className="w-full">
           <CardHeader>
             <CardTitle>No Questions Found</CardTitle>
             <CardDescription>
@@ -98,7 +141,7 @@ export default function JoinMeet() {
 
   return (
     <div className="container max-w-4xl py-8 px-4 mx-auto flex flex-col items-center">
-      <div className="mb-8">
+      <div className="mb-8 w-full">
         <Link href="/" className="flex items-center text-sm text-muted-foreground hover:text-primary">
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Home
@@ -106,11 +149,11 @@ export default function JoinMeet() {
       </div>
 
       <h1 className="text-2xl sm:text-3xl font-bold mb-2">Join Meet: {meetCode}</h1>
-      <p className="text-muted-foreground mb-6 sm:mb-8">
+      <p className="text-muted-foreground mb-6 sm:mb-8 text-center">
         Answer the following questions to find common interests with other participants.
       </p>
 
-      <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
         <p className="text-sm text-muted-foreground mb-2 sm:mb-0">
           Question {currentStep + 1} of {selectedQuestions.length}
         </p>
@@ -126,10 +169,10 @@ export default function JoinMeet() {
         </div>
       </div>
 
-      <Card>
+      <Card className="w-full">
         <CardHeader>
           <CardTitle>{currentQuestion.text}</CardTitle>
-          <CardDescription>Select True or False based on your personal experience.</CardDescription>
+          <CardDescription>Select one option based on your personal preference.</CardDescription>
         </CardHeader>
         <CardContent>
           <RadioGroup
@@ -140,18 +183,40 @@ export default function JoinMeet() {
             {currentQuestion.options.map((option, index) => (
               <div key={index} className="flex items-center space-x-2">
                 <RadioGroupItem value={option} id={`option-${index}`} />
-                <Label htmlFor={`option-${index}`}>{option}</Label>
+                <Label htmlFor={`option-${index}`} className="text-base cursor-pointer">
+                  {option}
+                </Label>
               </div>
             ))}
           </RadioGroup>
         </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={handlePrevious} disabled={currentStep === 0}>
+        <CardFooter className="flex flex-col sm:flex-row justify-between gap-2">
+          <Button
+            variant="outline"
+            onClick={handlePrevious}
+            disabled={currentStep === 0 || isSubmitting}
+            className="w-full sm:w-auto order-2 sm:order-1"
+          >
             Previous
           </Button>
-          <Button onClick={handleNext} disabled={!currentQuestion.answer}>
-            {isLastQuestion ? "Finish" : "Next"}
-            {!isLastQuestion && <ArrowRight className="ml-2 h-4 w-4" />}
+          <Button
+            onClick={handleNext}
+            disabled={!currentQuestion.answer || isSubmitting}
+            className="w-full sm:w-auto order-1 sm:order-2"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Submitting...
+              </>
+            ) : isLastQuestion ? (
+              "Finish"
+            ) : (
+              <>
+                Next
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </>
+            )}
           </Button>
         </CardFooter>
       </Card>
