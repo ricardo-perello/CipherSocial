@@ -9,27 +9,28 @@ import { Label } from "@/components/ui/label"
 import { useWallet } from "@/context/wallet-context"
 import { useMeet } from "@/context/meet-context"
 import { WalletRequiredDialog } from "@/components/wallet-required-dialog"
-import { ArrowLeft, ArrowRight, Loader2 } from "lucide-react"
+import { ArrowLeft, ArrowRight, Loader2, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { postRoot } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function JoinMeet() {
   const router = useRouter()
   const { toast } = useToast()
   const { connected, connectWallet, address } = useWallet()
-  const { meetCode, questions, setQuestionAnswer } = useMeet()
+  const { meetCode, name, questions, setQuestionAnswer } = useMeet()
   const [showWalletDialog, setShowWalletDialog] = useState(false)
   const [currentStep, setCurrentStep] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const selectedQuestions = questions.filter((q) => q.selected)
+  const [error, setError] = useState("")
 
   useEffect(() => {
     if (!connected) {
       setShowWalletDialog(true)
     }
 
-    // In a real app, you would fetch the selected questions for this meet code
+    // In a real app, you would fetch the questions for this meet code
     // For demo purposes, we'll just use the questions from context
   }, [connected, meetCode])
 
@@ -43,11 +44,18 @@ export default function JoinMeet() {
 
   const handleAnswer = (questionId: number, answer: string) => {
     setQuestionAnswer(questionId, answer)
+    setError("")
   }
 
   const handleNext = async () => {
-    if (currentStep < selectedQuestions.length - 1) {
+    if (!questions[currentStep]?.answer) {
+      setError("Please select an option before continuing")
+      return
+    }
+
+    if (currentStep < questions.length - 1) {
       setCurrentStep(currentStep + 1)
+      setError("")
     } else {
       // All questions answered, submit the data and proceed to meet details
       await handleSubmitAnswers()
@@ -59,7 +67,7 @@ export default function JoinMeet() {
 
     try {
       // Prepare data for the API call
-      const answeredQuestions = selectedQuestions.map((q) => ({
+      const answeredQuestions = questions.map((q) => ({
         id: q.id,
         text: q.text,
         answer: q.answer,
@@ -80,10 +88,10 @@ export default function JoinMeet() {
         description: "Your answers have been submitted successfully!",
       })
 
-      // Proceed to meet details
       router.push("/meet-details")
     } catch (error) {
       console.error("Error submitting answers:", error)
+
       toast({
         title: "Error",
         description: "Failed to submit answers. Please try again.",
@@ -96,11 +104,12 @@ export default function JoinMeet() {
   const handlePrevious = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1)
+      setError("")
     }
   }
 
-  const currentQuestion = selectedQuestions[currentStep]
-  const isLastQuestion = currentStep === selectedQuestions.length - 1
+  const currentQuestion = questions[currentStep]
+  const isLastQuestion = currentStep === questions.length - 1
 
   if (!connected) {
     return (
@@ -112,7 +121,7 @@ export default function JoinMeet() {
     )
   }
 
-  if (selectedQuestions.length === 0) {
+  if (questions.length === 0) {
     return (
       <div className="container max-w-4xl py-8 px-4 mx-auto flex flex-col items-center">
         <div className="mb-8 w-full">
@@ -149,16 +158,18 @@ export default function JoinMeet() {
       </div>
 
       <h1 className="text-2xl sm:text-3xl font-bold mb-2">Join Meet: {meetCode}</h1>
+      {name && <h2 className="text-xl font-medium mb-2">{name}</h2>}
       <p className="text-muted-foreground mb-6 sm:mb-8 text-center">
-        Answer the following questions to find common interests with other participants.
+        Answer the following questions to find common interests with other participants. Your answers will be processed
+        using Private Set Intersection to protect your privacy.
       </p>
 
       <div className="mb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between w-full">
         <p className="text-sm text-muted-foreground mb-2 sm:mb-0">
-          Question {currentStep + 1} of {selectedQuestions.length}
+          Question {currentStep + 1} of {questions.length}
         </p>
         <div className="flex gap-2">
-          {Array.from({ length: selectedQuestions.length }).map((_, index) => (
+          {Array.from({ length: questions.length }).map((_, index) => (
             <div
               key={index}
               className={`h-2 w-6 sm:w-8 rounded-full ${
@@ -169,18 +180,25 @@ export default function JoinMeet() {
         </div>
       </div>
 
+      {error && (
+        <Alert variant="destructive" className="mb-4 w-full">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>{currentQuestion.text}</CardTitle>
+          <CardTitle>{currentQuestion?.text}</CardTitle>
           <CardDescription>Select one option based on your personal preference.</CardDescription>
         </CardHeader>
         <CardContent>
           <RadioGroup
-            value={currentQuestion.answer || ""}
+            value={currentQuestion?.answer || ""}
             onValueChange={(value) => handleAnswer(currentQuestion.id, value)}
             className="space-y-3"
           >
-            {currentQuestion.options.map((option, index) => (
+            {currentQuestion?.options.map((option, index) => (
               <div key={index} className="flex items-center space-x-2">
                 <RadioGroupItem value={option} id={`option-${index}`} />
                 <Label htmlFor={`option-${index}`} className="text-base cursor-pointer">
@@ -201,13 +219,13 @@ export default function JoinMeet() {
           </Button>
           <Button
             onClick={handleNext}
-            disabled={!currentQuestion.answer || isSubmitting}
+            disabled={!currentQuestion?.answer || isSubmitting}
             className="w-full sm:w-auto order-1 sm:order-2"
           >
             {isSubmitting ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Submitting...
+                {isLastQuestion ? "Submitting..." : "Next..."}
               </>
             ) : isLastQuestion ? (
               "Finish"

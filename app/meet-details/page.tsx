@@ -15,7 +15,7 @@ import Link from "next/link"
 export default function MeetDetails() {
   const router = useRouter()
   const { connected, connectWallet } = useWallet()
-  const { meetCode, description, questions } = useMeet()
+  const { meetCode, name, questions } = useMeet()
   const [showWalletDialog, setShowWalletDialog] = useState(false)
   const [commonInterests, setCommonInterests] = useState<string[]>([])
   const [userId, setUserId] = useState("")
@@ -30,7 +30,7 @@ export default function MeetDetails() {
 
     // In a real app, you would use PSI to find common interests
     // For demo purposes, we'll just simulate some common interests
-    const answeredQuestions = questions.filter((q) => q.selected && q.answer)
+    const answeredQuestions = questions.filter((q) => q.answer)
     const simulatedCommonInterests = answeredQuestions
       .filter(() => Math.random() > 0.5) // Randomly select some as "common"
       .map((q) => `${q.text}: ${q.answer}`)
@@ -84,18 +84,25 @@ export default function MeetDetails() {
         </Link>
       </div>
 
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6">Meet: {meetCode}</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold mb-2">Meet: {meetCode}</h1>
+      {name && <h2 className="text-xl font-medium mb-6">{name}</h2>}
 
       <div className="grid gap-8 md:grid-cols-2 w-full">
         <Card className="w-full">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              Meet Description
+              Meet Information
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p>{description || "No description provided for this meet."}</p>
+            <p className="mb-4">
+              This meet uses Private Set Intersection (PSI) to find common interests while protecting your privacy.
+            </p>
+            <p className="text-sm text-muted-foreground">
+              <strong>How it works:</strong> Your answers are processed locally and only the necessary cryptographic
+              data is shared to find matches.
+            </p>
           </CardContent>
         </Card>
 

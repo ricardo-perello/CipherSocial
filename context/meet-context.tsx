@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
 
-// Update the Question interface to support multiple choice
+// Update the Question interface to support custom questions
 export interface Question {
   id: number
   text: string
@@ -13,39 +13,19 @@ export interface Question {
 
 interface MeetContextType {
   meetCode: string
-  description: string
+  name: string
   questions: Question[]
   setMeetCode: (code: string) => void
-  setDescription: (description: string) => void
-  toggleQuestionSelection: (id: number) => void
+  setName: (name: string) => void
+  addQuestion: (question: Question) => void
+  updateQuestion: (id: number, question: Partial<Question>) => void
+  removeQuestion: (id: number) => void
   setQuestionAnswer: (id: number, answer: string) => void
-  getSelectedQuestions: () => Question[]
   resetMeet: () => void
 }
 
-// Replace the defaultQuestions array with the new multiple-choice questions
-const defaultQuestions: Question[] = [
-  {
-    id: 1,
-    text: "What is your favourite book?",
-    options: ["Percy Jackson", "Harry Potter", "Angels and Demons", "Snow Crash", "Algorithms, third edition"],
-  },
-  {
-    id: 2,
-    text: "Where do you study?",
-    options: ["Paris", "EPFL", "Oxford", "UCL", "Imperial"],
-  },
-  {
-    id: 3,
-    text: "What is your primary language?",
-    options: ["German", "French", "Chinese", "Spanish", "English"],
-  },
-  {
-    id: 4,
-    text: "What subject are you most interested in?",
-    options: ["zkVM", "zkTLS", "AI", "Sharding", "Quantum Computers"],
-  },
-]
+// Replace the defaultQuestions array with empty array since questions will be created by users
+const defaultQuestions: Question[] = []
 
 // Generate a random 6-character code
 const generateMeetCode = () => {
@@ -57,7 +37,7 @@ const MeetContext = createContext<MeetContextType | undefined>(undefined)
 export function MeetProvider({ children }: { children: ReactNode }) {
   // Start with a placeholder, then update after mount
   const [meetCode, setMeetCode] = useState("LOADING")
-  const [description, setDescription] = useState("")
+  const [name, setName] = useState("")
   const [questions, setQuestions] = useState<Question[]>(defaultQuestions)
   const [isInitialized, setIsInitialized] = useState(false)
 
@@ -69,8 +49,16 @@ export function MeetProvider({ children }: { children: ReactNode }) {
     }
   }, [isInitialized])
 
-  const toggleQuestionSelection = (id: number) => {
-    setQuestions(questions.map((q) => (q.id === id ? { ...q, selected: !q.selected } : q)))
+  const addQuestion = (question: Question) => {
+    setQuestions([...questions, question])
+  }
+
+  const updateQuestion = (id: number, updatedFields: Partial<Question>) => {
+    setQuestions(questions.map((q) => (q.id === id ? { ...q, ...updatedFields } : q)))
+  }
+
+  const removeQuestion = (id: number) => {
+    setQuestions(questions.filter((q) => q.id !== id))
   }
 
   // Update the setQuestionAnswer function to handle string answers
@@ -78,13 +66,9 @@ export function MeetProvider({ children }: { children: ReactNode }) {
     setQuestions(questions.map((q) => (q.id === id ? { ...q, answer } : q)))
   }
 
-  const getSelectedQuestions = () => {
-    return questions.filter((q) => q.selected)
-  }
-
   const resetMeet = () => {
     setMeetCode(generateMeetCode())
-    setDescription("")
+    setName("")
     setQuestions(defaultQuestions)
   }
 
@@ -92,13 +76,14 @@ export function MeetProvider({ children }: { children: ReactNode }) {
     <MeetContext.Provider
       value={{
         meetCode,
-        description,
+        name,
         questions,
         setMeetCode,
-        setDescription,
-        toggleQuestionSelection,
+        setName,
+        addQuestion,
+        updateQuestion,
+        removeQuestion,
         setQuestionAnswer,
-        getSelectedQuestions,
         resetMeet,
       }}
     >

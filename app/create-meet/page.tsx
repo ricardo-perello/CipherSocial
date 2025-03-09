@@ -4,25 +4,41 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
 import { useWallet } from "@/context/wallet-context"
-import { useMeet } from "@/context/meet-context"
+import { useMeet, type Question } from "@/context/meet-context"
 import { WalletRequiredDialog } from "@/components/wallet-required-dialog"
-import { ArrowLeft, Copy, Check, Loader2 } from "lucide-react"
+import { ArrowLeft, Copy, Check, Loader2, Trash2, Edit, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { createMeetup } from "@/lib/api"
 import { useToast } from "@/hooks/use-toast"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export default function CreateMeet() {
   const router = useRouter()
   const { toast } = useToast()
   const { connected, connectWallet, address } = useWallet()
-  const { meetCode, description, questions, setDescription, toggleQuestionSelection, getSelectedQuestions } = useMeet()
+  const { meetCode, name, questions, setName, addQuestion, updateQuestion, removeQuestion } = useMeet()
   const [showWalletDialog, setShowWalletDialog] = useState(false)
   const [copied, setCopied] = useState(false)
   const [isCreating, setIsCreating] = useState(false)
+  const [errors, setErrors] = useState({
+    name: "",
+    questionText: "",
+    optionText: "",
+    general: "",
+  })
+  const [newQuestion, setNewQuestion] = useState<{
+    text: string
+    options: string[]
+    currentOption: string
+  }>({
+    text: "",
+    options: [],
+    currentOption: "",
+  })
+  const [editingQuestionId, setEditingQuestionId] = useState<number | null>(null)
 
   useEffect(() => {
     if (!connected) {
@@ -44,25 +60,126 @@ export default function CreateMeet() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  const handleCreateMeet = async () => {
-    const selectedQuestions = getSelectedQuestions()
-    if (selectedQuestions.length === 0) {
-      toast({
-        title: "Error",
-        description: "Please select at least one question",
-        variant: "destructive",
-      })
+  const validateOption = () => {
+    if (!newQuestion.currentOption.trim()) {
+      setErrors((prev) => ({ ...prev, optionText: "Option cannot be empty" }))
+      return false
+    }
+
+    if (newQuestion.options.includes(newQuestion.currentOption.trim())) {
+      setErrors((prev) => ({ ...prev, optionText: "This option already exists" }))
+      return false
+    }
+
+    setErrors((prev) => ({ ...prev, optionText: "" }))
+    return true
+  }
+
+  const handleAddOption = () => {
+    if (!validateOption()) return
+
+    if (newQuestion.options.length >= 5) {
+      setErrors((prev) => ({ ...prev, optionText: "Maximum 5 options allowed per question" }))
       return
     }
 
-    if (!description.trim()) {
-      toast({
-        title: "Error",
-        description: "Please add a description for your meet",
-        variant: "destructive",
-      })
+    setNewQuestion({
+      ...newQuestion,
+      options: [...newQuestion.options, newQuestion.currentOption.trim()],
+      currentOption: "",
+    })
+    setErrors((prev) => ({ ...prev, optionText: "" }))
+  }
+
+  const handleRemoveOption = (index: number) => {
+    setNewQuestion({
+      ...newQuestion,
+      options: newQuestion.options.filter((_, i) => i !== index),
+    })
+  }
+
+  const validateQuestion = () => {
+    if (!newQuestion.text.trim()) {
+      setErrors((prev) => ({ ...prev, questionText: "Question text cannot be empty" }))
+      return false
+    }
+
+    if (newQuestion.options.length !== 5) {
+      setErrors((prev) => ({ ...prev, questionText: "Each question must have exactly 5 options" }))
+      return false
+    }
+
+    setErrors((prev) => ({ ...prev, questionText: "" }))
+    return true
+  }
+
+  const handleAddQuestion = () => {
+    if (!validateQuestion()) return
+
+    if (questions.length >= 4 && editingQuestionId === null) {
+      setErrors((prev) => ({ ...prev, general: "Maximum 4 questions allowed" }))
       return
     }
+
+    if (editingQuestionId !== null) {
+      // Update existing question
+      updateQuestion(editingQuestionId, {
+        text: newQuestion.text.trim(),
+        options: newQuestion.options,
+      })
+      setEditingQuestionId(null)
+    } else {
+      // Add new question
+      addQuestion({
+        id: Date.now(),
+        text: newQuestion.text.trim(),
+        options: newQuestion.options,
+      })
+    }
+
+    // Reset form
+    setNewQuestion({
+      text: "",
+      options: [],
+      currentOption: "",
+    })
+    setErrors((prev) => ({ ...prev, questionText: "", general: "" }))
+  }
+
+  const handleEditQuestion = (question: Question) => {
+    setNewQuestion({
+      text: question.text,
+      options: [...question.options],
+      currentOption: "",
+    })
+    setEditingQuestionId(question.id)
+    setErrors((prev) => ({ ...prev, questionText: "", optionText: "", general: "" }))
+  }
+
+  const validateMeet = () => {
+    let isValid = true
+    const newErrors = { ...errors }
+
+    if (!name.trim()) {
+      newErrors.name = "Please enter a name for your meet"
+      isValid = false
+    } else {
+      newErrors.name = ""
+    }
+
+    if (questions.length !== 4) {
+      newErrors.general = `You need exactly 4 questions (currently have ${questions.length})`
+      isValid = false
+    } else {
+      newErrors.general = ""
+    }
+
+    setErrors(newErrors)
+    return isValid
+  }
+
+  const handleCreateMeet = async () => {
+    if (!validateMeet()) return
 
     setIsCreating(true)
 
@@ -70,8 +187,8 @@ export default function CreateMeet() {
       // Prepare data for the API call
       const meetupData = {
         meetCode,
-        description,
-        questions: selectedQuestions,
+        name,
+        questions,
         creator: address,
         timestamp: new Date().toISOString(),
       }
@@ -87,6 +204,7 @@ export default function CreateMeet() {
       router.push("/")
     } catch (error) {
       console.error("Error creating meet:", error)
+
       toast({
         title: "Error",
         description: "Failed to create meet. Please try again.",
@@ -146,23 +264,36 @@ export default function CreateMeet() {
         </Button>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-2 w-full">
+      {errors.general && (
+        <Alert variant="destructive" className="mb-6 w-full">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription>{errors.general}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="grid gap-8 w-full">
         <Card className="w-full">
           <CardHeader>
-            <CardTitle>Meet Description</CardTitle>
-            <CardDescription>Provide details about your meet to help others understand its purpose.</CardDescription>
+            <CardTitle>Meet Name</CardTitle>
+            <CardDescription>Give your meet a name to help others identify it.</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="description">Description</Label>
-                <Textarea
-                  id="description"
-                  placeholder="Describe what this meet is about..."
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  className="min-h-[150px]"
+                <Label htmlFor="name">Name</Label>
+                <Input
+                  id="name"
+                  placeholder="Enter a name for your meet..."
+                  value={name}
+                  onChange={(e) => {
+                    setName(e.target.value)
+                    if (e.target.value.trim()) {
+                      setErrors((prev) => ({ ...prev, name: "" }))
+                    }
+                  }}
+                  className={errors.name ? "border-red-500" : ""}
                 />
+                {errors.name && <p className="text-sm text-red-500">{errors.name}</p>}
               </div>
             </div>
           </CardContent>
@@ -170,36 +301,162 @@ export default function CreateMeet() {
 
         <Card className="w-full">
           <CardHeader>
-            <CardTitle>Select Questions</CardTitle>
+            <CardTitle>Create Questions</CardTitle>
             <CardDescription>
-              Choose questions that participants will answer. These will be used to find common interests.
+              Create exactly 4 questions with 5 options each. These will be used to find common interests among
+              participants. Each participant will select one option per question, and the system will use Private Set
+              Intersection to find matches.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {questions.map((question) => (
-                <div key={question.id} className="flex items-start space-x-2">
-                  <Checkbox
-                    id={`question-${question.id}`}
-                    checked={question.selected}
-                    onCheckedChange={() => toggleQuestionSelection(question.id)}
-                  />
-                  <Label htmlFor={`question-${question.id}`} className="text-sm leading-tight cursor-pointer">
-                    {question.text}
-                  </Label>
+            <div className="space-y-6">
+              {/* Question creation form - only show if less than 4 questions or editing */}
+              {(questions.length < 4 || editingQuestionId !== null) && (
+                <div className="space-y-4 border p-4 rounded-md">
+                  <div className="space-y-2">
+                    <Label htmlFor="question-text">
+                      {editingQuestionId !== null ? "Edit Question" : `Question (${questions.length}/4)`}
+                    </Label>
+                    <Input
+                      id="question-text"
+                      placeholder="Enter your question..."
+                      value={newQuestion.text}
+                      onChange={(e) => {
+                        setNewQuestion({ ...newQuestion, text: e.target.value })
+                        if (e.target.value.trim()) {
+                          setErrors((prev) => ({ ...prev, questionText: "" }))
+                        }
+                      }}
+                      className={errors.questionText ? "border-red-500" : ""}
+                    />
+                    {errors.questionText && <p className="text-sm text-red-500">{errors.questionText}</p>}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Options ({newQuestion.options.length}/5)</Label>
+                    <div className="flex flex-col gap-2">
+                      {newQuestion.options.map((option, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <div className="flex-grow p-2 bg-muted rounded text-sm">{option}</div>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleRemoveOption(index)}
+                            className="h-8 w-8"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+
+                      {/* Only show option input if less than 5 options */}
+                      {newQuestion.options.length < 5 && (
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder={`Add option ${newQuestion.options.length + 1}/5...`}
+                            value={newQuestion.currentOption}
+                            onChange={(e) => {
+                              setNewQuestion({ ...newQuestion, currentOption: e.target.value })
+                              if (e.target.value.trim()) {
+                                setErrors((prev) => ({ ...prev, optionText: "" }))
+                              }
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault()
+                                handleAddOption()
+                              }
+                            }}
+                            className={errors.optionText ? "border-red-500" : ""}
+                          />
+                          <Button
+                            onClick={handleAddOption}
+                            disabled={newQuestion.options.length >= 5 || !newQuestion.currentOption.trim()}
+                          >
+                            Add
+                          </Button>
+                        </div>
+                      )}
+
+                      {errors.optionText && <p className="text-sm text-red-500">{errors.optionText}</p>}
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={handleAddQuestion}
+                    className="w-full"
+                    disabled={!newQuestion.text.trim() || newQuestion.options.length !== 5}
+                  >
+                    {editingQuestionId !== null ? "Update Question" : "Add Question"}
+                  </Button>
                 </div>
-              ))}
+              )}
+
+              {/* Message when 4 questions are created */}
+              {questions.length >= 4 && editingQuestionId === null && (
+                <Alert className="bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-900">
+                  <Check className="h-4 w-4 text-green-600 dark:text-green-400" />
+                  <AlertDescription className="text-green-600 dark:text-green-400">
+                    You've created all 4 required questions. You can edit them below if needed.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* List of created questions */}
+              <div className="space-y-4">
+                <h3 className="font-medium">Created Questions ({questions.length}/4)</h3>
+                {questions.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">
+                    No questions created yet. You need to create 4 questions.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {questions.map((question) => (
+                      <div key={question.id} className="border rounded-md p-3">
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-medium">{question.text}</h4>
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleEditQuestion(question)}
+                              className="h-8 w-8"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeQuestion(question.id)}
+                              className="h-8 w-8"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          {question.options.map((option, index) => (
+                            <div key={index} className="text-sm text-muted-foreground pl-2">
+                              • {option}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="mt-8 flex justify-end w-full">
+      <div className="mt-8 flex w-full">
         <Button
           onClick={handleCreateMeet}
           size="lg"
-          disabled={meetCode === "LOADING" || isCreating}
-          className="w-full md:w-auto"
+          disabled={meetCode === "LOADING" || isCreating || !name.trim() || questions.length !== 4}
+          className="w-full md:w-auto ml-auto"
         >
           {isCreating ? (
             <>
