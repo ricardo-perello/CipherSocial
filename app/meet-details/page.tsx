@@ -64,8 +64,8 @@ export default function MeetDetails() {
     let intersectionAnswers: string[] = []
     questions.forEach((q) => {
       responses.intersection.forEach((p) => {
-        console.log(responses.intersection)
-        if (q.id == p.intersection.id && q.answer) {
+        console.log(p)
+        if (q.id == p.id && q.answer) {
           intersectionAnswers.push(q.answer)          
         }
       })
