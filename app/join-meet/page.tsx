@@ -69,8 +69,7 @@ export default function JoinMeet() {
       // Prepare data for the API call
       const answeredQuestions = questions.map((q) => ({
         id: q.id,
-        text: q.text,
-        answer: q.answer,
+        answer: q.answerId,
       }))
 
       const rootData = {

@@ -9,6 +9,7 @@ export interface Question {
   options: string[]
   selected?: boolean
   answer?: string // Changed from boolean to string to store the selected option
+  answerId : number
 }
 
 interface MeetContextType {
