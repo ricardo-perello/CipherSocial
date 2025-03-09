@@ -11,11 +11,13 @@ import { useMeet } from "@/context/meet-context"
 import { WalletRequiredDialog } from "@/components/wallet-required-dialog"
 import { ArrowLeft, Users, Sparkles, Search, UserCheck, Loader2 } from "lucide-react"
 import Link from "next/link"
+import { useToast } from "@/hooks/use-toast"
 
 import {sendInterests} from "@/lib/api"
 
 export default function MeetDetails() {
   const router = useRouter()
+  const { toast } = useToast()
   const { connected, connectWallet } = useWallet()
   const { meetCode, name, questions } = useMeet()
   const [showWalletDialog, setShowWalletDialog] = useState(false)
@@ -73,6 +75,12 @@ export default function MeetDetails() {
 
     setSearchedUser(userId)
     setUserCommonInterests(intersectionAnswers)
+    toast({
+      title: "Transaction Submitted",
+      description: `Transaction hash: ${responses.tx_hash}`,
+      variant: "default"
+    })
+
     setIsSearching(false)
   }
 
